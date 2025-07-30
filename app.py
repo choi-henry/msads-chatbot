@@ -1,6 +1,8 @@
+import sys
 import os
-import streamlit as st
-from rag_pipeline import generate_answer
+sys.path.append(os.path.dirname(os.path.abspath(__file__))) 
+
+from rag_pipeline import generate_answer 
 
 # ✅ Auto-build Chroma DB if missing
 if not os.path.exists("chroma_db"):
