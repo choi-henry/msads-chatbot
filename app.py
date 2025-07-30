@@ -1,4 +1,5 @@
 import streamlit as st
+from rag_pipeline import generate_answer
 
 # 🖼️ 페이지 세팅
 st.set_page_config(page_title="MSADS Assistant", page_icon="🎓", layout="centered")
@@ -18,8 +19,7 @@ user_question = st.text_input("💡 Enter your question below:")
 # 🔍 질문이 있을 경우
 if user_question:
     with st.spinner("Generating answer..."):
-        # 여기서 RAG 파이프라인 연결
-        answer = "Answer will appear here... (RAG response placeholder)"
+        answer = generate_answer(user_question)
 
     st.success("✅ Answer")
     st.markdown(f"> {answer}")
@@ -35,3 +35,5 @@ with col1:
 with col2:
     if st.button("🎓 How do I apply?"):
         st.experimental_set_query_params(question="How do I apply to the MSADS program?")
+
+
