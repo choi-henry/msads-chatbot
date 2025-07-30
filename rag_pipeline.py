@@ -1,40 +1,42 @@
 # rag_pipeline.py
 import os
-import pandas as pd
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from dotenv import load_dotenv
+
+# ✅ Load environment variables
+load_dotenv()
+
+# ✅ Build Chroma DB if not exists
+if not os.path.exists("chroma_db"):
+    os.system("python build_chroma.py")
+
+# ✅ LangChain / HuggingFace import
 from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.llms import HuggingFaceHub
 from langchain.chains import RetrievalQA
 
-# 1. Load and prepare data
-df = pd.read_csv("scraped_output_metadata.csv")
-raw_text = " ".join(df["text"].dropna().tolist())
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=80)
-docs = text_splitter.create_documents([raw_text])
-
-# 2. Embedding model
+# 1. Load embedding model
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-# 3. In-memory Chroma vectorstore
-vectorstore = Chroma.from_documents(docs, embedding)
+# 2. Load Chroma DB
+vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embedding)
 
-# 4. HuggingFace LLM
+# 3. Load LLM
 llm = HuggingFaceHub(
     repo_id="google/flan-t5-base",
     model_kwargs={"temperature": 0.2, "max_new_tokens": 256}
 )
 
-# 5. RAG chain
+# 4. Setup RetrievalQA
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=vectorstore.as_retriever(),
     return_source_documents=False
 )
 
-# 6. Streamlit interface function
+# 5. Interface
 def generate_answer(question: str) -> str:
     try:
         return qa_chain.run(question)
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"❌ Error generating answer: {str(e)}"
