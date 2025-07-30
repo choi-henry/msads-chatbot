@@ -1,5 +1,10 @@
+import os
 import streamlit as st
 from rag_pipeline import generate_answer
+
+# ✅ Auto-build Chroma DB if missing
+if not os.path.exists("chroma_db"):
+    os.system("python build_chroma.py")
 
 st.set_page_config(page_title="MSADS Assistant", page_icon="🎓", layout="centered")
 
