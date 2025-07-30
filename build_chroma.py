@@ -1,17 +1,18 @@
+# build_chroma.py
+
 import pandas as pd
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
 
-# 1. Load the CSV
+# 1. CSV file loading
 df = pd.read_csv("scraped_output_metadata.csv")
-print("📄 CSV Loaded. Columns:", df.columns)
+print(" text preview:\n", df["text"].head())
 
-# 2. Combine text from the 'text' column
-df["text"] = df["text"].fillna("")  # 혹시 null 값이 있으면 공백으로 대체
-raw_text = " ".join(df["text"].tolist())
-print("🔍 Raw text length:", len(raw_text))
-print("🔍 Raw text sample:", raw_text[:300])
+# 2. Combine all text into a single string
+raw_text = " ".join(df["text"].dropna().tolist())
+print(" Raw text length:", len(raw_text))
+print(" Raw text sample:", raw_text[:300])
 
 # 3. Chunking
 text_splitter = RecursiveCharacterTextSplitter(
@@ -19,16 +20,19 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=80
 )
 chunks = text_splitter.create_documents([raw_text])
-print(f"✅ Successfully created {len(chunks)} text chunks!")
+print(f" Successfully created {len(chunks)} text chunks!")
 
-# 4. Embedding + Chroma Vectorstore 저장
-embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-chroma_db_path = "chroma_db"
+# 4. Embedding
+embedding_model = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 
-vectorstore = Chroma.from_documents(
+# 5. Chroma DB creation
+db = Chroma.from_documents(
     documents=chunks,
     embedding=embedding_model,
-    persist_directory=chroma_db_path
+    persist_directory="./chroma_db"
 )
-vectorstore.persist()
-print(f"✅ Chroma vectorstore saved to '{chroma_db_path}'")
+
+db.persist()
+print(" ChromaDB saved! (./chroma_db)")
