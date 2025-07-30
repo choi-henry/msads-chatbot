@@ -1,6 +1,9 @@
 streamlit
 langchain>=0.1.14
+langchain-community
 chromadb
 sentence-transformers
 openai
+huggingface_hub
 tiktoken
+python-dotenv
