@@ -6,11 +6,11 @@ st.set_page_config(page_title="MSADS Assistant", page_icon="🎓", layout="cente
 # 🎓 사이드바 로고와 소개
 st.sidebar.image("https://www.uchicago.edu/assets/images/logos/primary-logo.svg", width=200)
 st.sidebar.markdown("### MSADS Chatbot Assistant")
-st.sidebar.markdown("Built with ❤️ by Group1 (2025)")
+st.sidebar.markdown("Built with by Group1 (2025)")
 
 # 🏷️ 상단 타이틀
-st.title("🎓 MSADS Chatbot Assistant")
-st.markdown("Ask me anything about the [UChicago MSADS program](https://professional.uchicago.edu/find-your-fit/masters/master-science-applied-data-science).")
+st.title("MSADS Chatbot Assistant")
+st.markdown("Ask me anything about the [UChicago MSADS program]https://ms-ads.datascience.uchicago.edu/?utm_source=carnegie-digital&utm_medium=ppc&utm_campaign=datascience+22391982909&utm_term=google&utm_content=university%20of%20chicago%20data%20science-p&gad_source=1&gad_campaignid=22391982909&gbraid=0AAAAAp8ba34MjWnroYWqHaI1y7A1rMVpG&gclid=Cj0KCQjwhafEBhCcARIsAEGZEKJ17CFdVgQcym9M7_JMbgfaEmD5HbEtE86TbN5FeJFMzztEoPgpBacaAuYpEALw_wcB.")
 
 # 💬 사용자 질문 입력
 user_question = st.text_input("💡 Enter your question below:")
