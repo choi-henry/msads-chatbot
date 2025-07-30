@@ -7,3 +7,4 @@ openai
 huggingface_hub
 tiktoken
 python-dotenv
+faiss-cpu
