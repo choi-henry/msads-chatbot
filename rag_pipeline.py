@@ -8,8 +8,8 @@
 # In[ ]:
 
 
-# source activate adsp-genai
-get_ipython().system('source /opt/conda/bin/activate adsp-genai')
+import os
+print("🔹 CONDA env:", os.environ.get("CONDA_DEFAULT_ENV"))
 
 
 # In[ ]:
