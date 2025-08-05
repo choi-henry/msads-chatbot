@@ -360,7 +360,6 @@ db = store_embed_in_db(all_chunks, all_metas, embedder = embedder)
 # In[ ]:
 
 
-len(data['documents'])
 
 
 # In[ ]:
