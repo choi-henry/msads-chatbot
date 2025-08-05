@@ -8,8 +8,6 @@
 # In[ ]:
 
 
-import os
-print("🔹 CONDA env:", os.environ.get("CONDA_DEFAULT_ENV"))
 
 
 # In[ ]:
