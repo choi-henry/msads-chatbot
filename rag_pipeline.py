@@ -855,7 +855,23 @@ torch.cuda.reset_peak_memory_stats()
 
 
 # In[ ]:
+def generate_answer(question: str, model_choice: str = "1") -> str:
+    selected_model = MODELS.get(model_choice)
+    llm = load_llm_model(selected_model)
 
+    rag_prompt = create_rag_prompt(
+        question,
+        db_retriever=db,
+        embedder=embedder,
+        k_docs=10,
+        lambda_mult=0.3,
+        query_prefix="query: ",
+        doc_prefix="passage: ",
+        use_query_expansion=True
+    )
+
+    response = llm(rag_prompt)
+    return response
 
 if __name__ == "__main__":
     main()
@@ -882,22 +898,6 @@ if __name__ == "__main__":
 # In[ ]:
 
 
-def generate_answer(question: str, model_choice: str = "1") -> str:
-    selected_model = MODELS.get(model_choice)
-    llm = load_llm_model(selected_model)
-
-    rag_prompt = create_rag_prompt(question,
-                   db_retriever = db,
-                   embedder = embedder,
-                   k_docs = 10,
-                   lambda_mult = 0.3,
-                   query_prefix = 'query: ',
-                   doc_prefix = 'passage: ',
-                   use_query_expansion = True
-                   )
-
-    response = llm(rag_prompt)
-    return response
 
 
 
