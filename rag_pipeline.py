@@ -40,7 +40,7 @@ import requests
 from bs4 import BeautifulSoup
 import fitz  # PyMuPDF
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
+from langchain.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 from sklearn.decomposition import PCA
@@ -306,57 +306,42 @@ len(embeddings[0])
 # In[ ]:
 
 
-from langchain_chroma import Chroma
-# from langchain.vectorstores import Chroma
+from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
+from typing import Optional, List
 import time
 from pathlib import Path
-from typing import Optional, Union
 
-
-def store_embed_in_db(texts: List[str],
+def store_embed_in_db(
+    texts: List[str],
     metas: List[dict],
     embedder: Optional[Embeddings] = None,
-    persist_directory: Optional[Union[str, Path]] = None
-) -> Chroma:
+    persist_directory: Optional[str] = "faiss_index"
+) -> FAISS:
     """
-    Store text chunks (and their embeddings) in a Chroma vector database.
-
-    You must provide *either* `embeddings` (precomputed) *or* an `embedder`
-    (model that implements .embed_documents).
+    Store text chunks in FAISS vector database.
 
     Args:
         texts: List of text chunks to index.
-        embedder: Optional Embeddings object; used to compute embeddings on the fly.
-        persist_directory: Directory where the Chroma DB will be saved.
-            If None, a timestamped folder will be created.
+        metas: List of metadata dictionaries for each chunk.
+        embedder: LangChain-compatible embedding model.
+        persist_directory: Folder where FAISS index will be saved.
 
     Returns:
-        A Chroma vector store instance with your texts indexed.
+        A FAISS vector store instance.
     """
-
     if embedder is None:
-        raise ValueError("You must supply an `embedder`")
+        raise ValueError("You must supply an `embedder`.")
 
-    if persist_directory is None:
-        ts = int(time.time())
-        persist_directory = Path(f"./chroma_scifact_run_{ts}")
-    persist_directory = Path(persist_directory)
-
-    all_metas = df_chunks['metadata'].tolist()
-
-
-    db = Chroma.from_texts(
+    db = FAISS.from_texts(
         texts=texts,
         embedding=embedder,
-        metadatas = metas,
-        persist_directory=str(persist_directory)
+        metadatas=metas
     )
 
-    print("Chunks successfully stored in Chroma vector DB.")
-
+    db.save_local(persist_directory)
+    print(f"✅ FAISS DB saved to: {persist_directory}")
     return db
-
 
 # In[ ]:
 
@@ -367,8 +352,7 @@ db = store_embed_in_db(all_chunks, all_metas, embedder = embedder)
 # In[ ]:
 
 
-col = db._collection  # the underlying chromadb Collection
-data = col.get()
+
 
 
 # In[ ]:
