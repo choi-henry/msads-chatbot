@@ -1,7 +1,7 @@
 streamlit
 langchain>=0.1.14
 langchain-community
-chromadb
+chromadb==0.4.15
 sentence-transformers
 openai
 huggingface_hub
