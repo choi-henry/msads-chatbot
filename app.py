@@ -6,8 +6,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from rag_pipeline import generate_answer 
 
 # ✅ Auto-build Chroma DB if missing
-if not os.path.exists("chroma_db"):
-    os.system("python build_chroma.py")
+if not os.path.exists("faiss_index/index.faiss"):
+    os.system("python build_faiss.py")
 
 st.set_page_config(page_title="MSADS Assistant", page_icon="🎓", layout="centered")
 
@@ -39,3 +39,4 @@ if user_question:
         answer = generate_answer(user_question)
     st.success(" Answer")
     st.markdown(f"> {answer}")
+
