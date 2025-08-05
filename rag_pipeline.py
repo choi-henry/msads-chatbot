@@ -882,8 +882,7 @@ if __name__ == "__main__":
 # In[ ]:
 
 
-if __name__ == "__main__":
-    main()
+
 
 
 # ## Question 3: Can you provide information about the capstone project??
@@ -891,8 +890,7 @@ if __name__ == "__main__":
 # In[ ]:
 
 
-if __name__ == "__main__":
-    main()
+
 
 
 # In[ ]:
