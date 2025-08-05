@@ -6,8 +6,10 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from rag_pipeline import generate_answer 
 
 # ✅ Auto-build Chroma DB if missing
-if not os.path.exists("faiss_index/index.faiss"):
-    os.system("python build_faiss.py")
+if not os.path.exists(os.path.join(base_dir, "faiss_index", "index.faiss")):
+    exit_code = os.system(f"python {os.path.join(base_dir, 'build_faiss.py')}")
+    if exit_code != 0:
+        st.error("⚠️ Failed to build FAISS index. Check logs for details.")
 
 st.set_page_config(page_title="MSADS Assistant", page_icon="🎓", layout="centered")
 
@@ -39,4 +41,5 @@ if user_question:
         answer = generate_answer(user_question)
     st.success(" Answer")
     st.markdown(f"> {answer}")
+
 
