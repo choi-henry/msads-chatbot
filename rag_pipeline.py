@@ -145,13 +145,24 @@ MODEL_CONFIG = {
     "decoder only": {"model_cls": "text-generation", "pipeline": AutoModelForCausalLM}
 }
 
-def load_llm_model(selected_model: dict, max_tokens: int = 1024):
+def load_llm_model(selected_model: dict,
+                   max_tokens: int = 1024):
     model_name = selected_model['model_name']
     model_type = selected_model['model_type']
+
+    model_config_cls = MODEL_CONFIG[model_type]['model_cls']
+    model_config_pipeline = MODEL_CONFIG[model_type]['pipeline']
+
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = MODEL_CONFIG[model_type]['pipeline'].from_pretrained(model_name, device_map="auto", torch_dtype="auto")
-    pipe = pipeline(MODEL_CONFIG[model_type]['model_cls'], model=model, tokenizer=tokenizer, max_new_tokens=max_tokens)
-    return HuggingFacePipeline(pipeline=pipe)
+    model = model_config_pipeline.from_pretrained(model_name)  
+
+    pipe = pipeline(model_config_cls,
+                    model=model,
+                    tokenizer=tokenizer,
+                    max_new_tokens=max_tokens)
+    llm = HuggingFacePipeline(pipeline=pipe)
+
+    return llm
 
 # === Streamlit Entry Function ===
 def generate_answer(question: str, model_choice: str = "1") -> str:
