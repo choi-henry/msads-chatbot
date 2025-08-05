@@ -3,7 +3,7 @@
 import pandas as pd
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain.vectorstores import Chroma
 
 # 1. CSV file loading
 df = pd.read_csv("scraped_output_metadata.csv")
