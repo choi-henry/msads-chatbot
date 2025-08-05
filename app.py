@@ -3,12 +3,11 @@ import os
 import streamlit as st
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__))) 
+sys.path.append(base_dir)
 
 from rag_pipeline import generate_answer 
 
-# ✅ Auto-build Chroma DB if missing
+# ✅ Auto-build FAISS DB if missing
 if not os.path.exists(os.path.join(base_dir, "faiss_index", "index.faiss")):
     exit_code = os.system(f"python {os.path.join(base_dir, 'build_faiss.py')}")
     if exit_code != 0:
@@ -26,17 +25,18 @@ if "preset_question" not in st.session_state:
 st.title("🎓 MSADS Chatbot Assistant")
 st.markdown("Ask me anything about the [UChicago MSADS program](https://ms-ads.datascience.uchicago.edu/).")
 
-# FAQ
+# FAQ buttons
 col1, col2 = st.columns(2)
 with col1:
     if st.button(" What are the core courses?"):
         st.session_state.preset_question = "What are the core courses of the MSADS program?"
-        st.experimental_rerun()
+        st.rerun()
 with col2:
     if st.button(" How do I apply?"):
         st.session_state.preset_question = "How do I apply to the MSADS program?"
-        st.experimental_rerun()
+        st.rerun()
 
+# Main Q&A input
 user_question = st.text_input("💡 Enter your question below:", value=st.session_state.preset_question)
 
 if user_question:
@@ -44,6 +44,7 @@ if user_question:
         answer = generate_answer(user_question)
     st.success(" Answer")
     st.markdown(f"> {answer}")
+
 
 
 
