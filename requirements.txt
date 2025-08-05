@@ -16,4 +16,3 @@ matplotlib
 pandas
 beautifulsoup4
 PyMuPDF
-datasets
