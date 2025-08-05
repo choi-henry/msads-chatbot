@@ -39,7 +39,6 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import fitz  # PyMuPDF
-from datasets import load_dataset
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
