@@ -1,24 +1,15 @@
-# Core
 streamlit
 python-dotenv
-
-# LangChain + VectorStore
 langchain>=0.1.14
 langchain-community
 langchain-chroma
 faiss-cpu               
-
-# Embeddings
 sentence-transformers
 transformers
 huggingface_hub
 tiktoken
-
-# Core ML
 torch
 scikit-learn
-
-# Utilities
 matplotlib
 pandas
 beautifulsoup4
