@@ -53,8 +53,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # In[ ]:
 
-
-df = pd.read_csv("scraped_output_metadata.csv")
+import os
+base_dir = os.path.dirname(os.path.abspath(__file__))
+df_path = os.path.join(base_dir, "scraped_output_metadata.csv")
+df = pd.read_csv(df_path)
 
 
 # In[ ]:
