@@ -4,8 +4,6 @@
 # In[ ]:
 
 
-conda env list
-
 
 # In[ ]:
 
