@@ -1,19 +1,25 @@
+# Core
 streamlit
+python-dotenv
+
+# LangChain + VectorStore
 langchain>=0.1.14
 langchain-community
-chromadb==0.4.15
+langchain-chroma
+faiss-cpu               
+
+# Embeddings
 sentence-transformers
-openai
+transformers
 huggingface_hub
 tiktoken
-python-dotenv
-faiss-cpu
-langchain-chroma
-transformers
+
+# Core ML
 torch
 scikit-learn
+
+# Utilities
 matplotlib
 pandas
 beautifulsoup4
 PyMuPDF
-faiss-cpu
