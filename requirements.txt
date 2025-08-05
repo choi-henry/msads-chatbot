@@ -8,3 +8,11 @@ huggingface_hub
 tiktoken
 python-dotenv
 faiss-cpu
+langchain-chroma
+transformers
+torch
+scikit-learn
+matplotlib
+pandas
+beautifulsoup4
+PyMuPDF
