@@ -113,19 +113,32 @@ def create_rag_prompt(selected_query: str, db_retriever: FAISS, embedder: Embedd
     expanded_queries = expand_query(selected_query)
     meta_filter = detect_metadata_filter(selected_query)
 
-    # 한 확장쿼리당 k를 낮춰 전체 중복 줄이기
     per_k = max(3, min(6, k_docs))
-
-    # 검색
     retriever = db_retriever.as_retriever(search_type="mmr",
                                           search_kwargs={"k": per_k, "lambda_mult": 0.3})
+
     collected = []
     for exp_q in expanded_queries:
         hits = retriever.get_relevant_documents(exp_q)
+        # FAISS는 filter 미지원 → 사후 필터링
         hits = apply_meta_filter(hits, meta_filter)
         collected.extend(hits)
 
-    # 중복 제거: (source_idx, chunk_idx) 키 사용
+    # ---- 빈 결과 폴백 1: 메타필터 해제하고 한 번 더 ----
+    if not collected:
+        for exp_q in expanded_queries:
+            collected.extend(retriever.get_relevant_documents(exp_q))
+
+    # ---- 빈 결과 폴백 2: 최소 프롬프트 반환 ----
+    if not collected:
+        return f"""You are an educational assistant.
+No context was retrieved. Answer briefly based on general MSADS information style (do not hallucinate; say you don't have the info if unsure).
+
+[QUESTION]
+{selected_query}
+"""
+
+    # 중복 제거
     seen, uniq_docs = set(), []
     for d in collected:
         key = ((d.metadata or {}).get("source_idx"), (d.metadata or {}).get("chunk_idx"))
@@ -133,11 +146,16 @@ def create_rag_prompt(selected_query: str, db_retriever: FAISS, embedder: Embedd
             seen.add(key)
             uniq_docs.append(d)
 
-    # 간단 가중치: 코사인 + 키워드 겹침
-    query_vec = embedder.embed_query(selected_query)
-    doc_vecs = embedder.embed_documents([d.page_content for d in uniq_docs])
-    sim = cosine_similarity([query_vec], doc_vecs)[0]
+    # === 안전한 벡터화(2D 보장) ===
+    query_vec = np.asarray(embedder.embed_query(selected_query), dtype=np.float32).reshape(1, -1)
+    doc_vecs_list = embedder.embed_documents([d.page_content for d in uniq_docs])
+    doc_vecs = np.asarray(doc_vecs_list, dtype=np.float32)
+    if doc_vecs.ndim == 1:
+        doc_vecs = doc_vecs.reshape(1, -1)
 
+    sim = cosine_similarity(query_vec, doc_vecs)[0]
+
+    # 가벼운 키워드 부스트
     q_words = set(re.findall(r"\b\w+\b", selected_query.lower()))
     scored = []
     for d, s in zip(uniq_docs, sim):
