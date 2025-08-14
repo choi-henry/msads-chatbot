@@ -1,4 +1,5 @@
 import os, ast, re
+import numpy as np
 import pandas as pd
 from typing import List, Optional, Dict, Any
 from sklearn.metrics.pairwise import cosine_similarity
