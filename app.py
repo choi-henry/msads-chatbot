@@ -140,27 +140,28 @@ with right:
             )
             st.divider()
 
-# ===== Footer =====
+# ===== Footer (centered logo) =====
 st.markdown("---")
 
-st.markdown(
-    """
-    <div style="text-align:center; padding:10px;">
-    """,
-    unsafe_allow_html=True
+logo_path = os.path.join(
+    base_dir,
+    "University Logo",
+    "SVG_RGB_Digital",
+    "University Logo_1Color_Maroon_RGB.svg"
 )
 
-#
-st.image(logo_path, width=300)
+left, mid, right = st.columns([1, 2, 1])  # 좌/중앙/우 여백
+with mid:
+    st.image(logo_path, width=220)  # 크기는 여기서 조절
+    st.markdown(
+        """
+        <div style="text-align:center; color:grey; font-size:14px; margin-top:6px;">
+            MSADS Chatbot Assistant · Midterm Project · Built by Group1 (2025)
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-st.markdown(
-    """
-    <div style="text-align:center; padding:5px; color:grey; font-size:14px;">
-        MSADS Chatbot Assistant · Midterm Project · Built by Group1 (2025)
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 
 
 
