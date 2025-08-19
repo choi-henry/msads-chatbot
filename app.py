@@ -21,11 +21,13 @@ st.set_page_config(page_title="MSADS Assistant", page_icon="🎓", layout="wide"
 
 # ===== Sidebar =====
 st.sidebar.markdown("## 🎓 MSADS Chatbot Assistant")
-logo_path = os.path.join(base_dir, "assets", "uchicago_logo.png")
+
+logo_path = os.path.join(base_dir, "University Logo", "SVG_RGB_Digital", "University Logo_1Color_Maroon_RGB.svg")
 if os.path.exists(logo_path):
-    st.sidebar.image(logo_path)  # use_container_width 파라미터 없이 경고 회피
+    st.sidebar.image(logo_path, width=200)
 else:
     st.sidebar.image("https://toppng.com/vector/the-university-of-chicago-logo-vector/460006")
+
 st.sidebar.markdown("Built by Group1 (2025)")
 st.sidebar.markdown("---")
 
@@ -137,6 +139,7 @@ with right:
                 unsafe_allow_html=True
             )
             st.divider()
+
 
 
 
