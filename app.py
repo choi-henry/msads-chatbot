@@ -7,7 +7,7 @@ from datetime import datetime
 base_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(base_dir)
 
-from rag_pipeline import generate_answer  # 기존 함수 그대로 사용
+from rag_pipeline import generate_answer 
 
 # ===== Build FAISS if missing =====
 faiss_path = os.path.join(base_dir, "faiss_index", "index.faiss")
@@ -89,7 +89,7 @@ with left:
 
 with right:
     # ---- Ask a Question ----
-    st.subheader("❓ Ask a Question")
+    st.subheader("Inquire About the MSADS Program @UChicago")
     with st.form("qa_form", clear_on_submit=False):
         user_question = st.text_input(
             "💡 Enter your question below:",
@@ -140,6 +140,16 @@ with right:
             )
             st.divider()
 
+# ===== Footer =====
+st.markdown("---")
+st.markdown(
+    f"""
+    <div style="text-align:center; padding:15px; color:grey; font-size:14px;">
+        <img src="assets/uchicago_logo.png" alt="UChicago Logo" style="height:40px;"><br>
+        MSADS Chatbot Assistant · Built by Group1 (2025)
+    </div>
+    """,
+    unsafe_allow_html=True
 
 
 
