@@ -89,7 +89,7 @@ with left:
 
 with right:
     # ---- Ask a Question ----
-    st.subheader("Inquire About the MSADS Program @UChicago")
+    st.subheader("Inquire About the MSADS Program at UChicago")
     with st.form("qa_form", clear_on_submit=False):
         user_question = st.text_input(
             "💡 Enter your question below:",
@@ -140,19 +140,17 @@ with right:
             )
             st.divider()
 
-# ===== Footer (centered logo) =====
+# ===== Footer (centered) =====
 st.markdown("---")
 
 logo_path = os.path.join(
-    base_dir,
-    "University Logo",
-    "SVG_RGB_Digital",
+    base_dir, "University Logo", "SVG_RGB_Digital",
     "University Logo_1Color_Maroon_RGB.svg"
 )
 
-left, mid, right = st.columns([1, 2, 1])  # 좌/중앙/우 여백
-with mid:
-    st.image(logo_path, width=220)  # 크기는 여기서 조절
+c1, c2, c3 = st.columns([1, 1, 1])  # 정확히 3등분
+with c2:
+    st.image(logo_path, width=220)
     st.markdown(
         """
         <div style="text-align:center; color:grey; font-size:14px; margin-top:6px;">
@@ -161,6 +159,7 @@ with mid:
         """,
         unsafe_allow_html=True
     )
+
 
 
 
