@@ -145,12 +145,13 @@ st.markdown("---")
 
 st.markdown(
     """
-    <div style="text-align:center; padding:15px; color:grey; font-size:14px;">
+    <div style="text-align:center; padding:10px;">
     """,
     unsafe_allow_html=True
 )
 
-st.image(logo_path, width=120)
+#
+st.image(logo_path, width=300)
 
 st.markdown(
     """
@@ -160,6 +161,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
