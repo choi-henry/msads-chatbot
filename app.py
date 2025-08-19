@@ -143,13 +143,15 @@ with right:
 # ===== Footer =====
 st.markdown("---")
 st.markdown(
-    f"""
+    """
     <div style="text-align:center; padding:15px; color:grey; font-size:14px;">
         <img src="assets/uchicago_logo.png" alt="UChicago Logo" style="height:40px;"><br>
         MSADS Chatbot Assistant · Built by Group1 (2025)
     </div>
     """,
     unsafe_allow_html=True
+)
+
 
 
 
