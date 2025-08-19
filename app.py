@@ -23,15 +23,13 @@ st.set_page_config(page_title="MSADS Assistant", page_icon="🎓", layout="wide"
 st.sidebar.markdown("## 🎓 MSADS Chatbot Assistant")
 logo_path = os.path.join(base_dir, "assets", "uchicago_logo.png")
 if os.path.exists(logo_path):
-    st.sidebar.image(logo_path)
+    st.sidebar.image(logo_path)  # use_container_width 파라미터 없이 경고 회피
 else:
     st.sidebar.image("https://www.uchicago.edu/assets/images/logos/primary-logo.svg")
 st.sidebar.markdown("Built by Group1 (2025)")
 st.sidebar.markdown("---")
 
 # ===== Session State =====
-if "preset_question" not in st.session_state:
-    st.session_state.preset_question = ""
 if "history" not in st.session_state:
     st.session_state.history = []
 if "answer" not in st.session_state:
@@ -39,10 +37,27 @@ if "answer" not in st.session_state:
 if "last_question" not in st.session_state:
     st.session_state.last_question = ""
 
+# ===== Helper: run QA =====
+def run_qa(q: str):
+    q = (q or "").strip()
+    if not q:
+        return
+    with st.spinner("Generating answer..."):
+        try:
+            ans = generate_answer(q)
+        except Exception:
+            st.error("⚠️ Error while generating the answer. Check logs for details.")
+            return
+    st.session_state.answer = ans
+    st.session_state.last_question = q
+    st.session_state.history.append(
+        {"q": q, "a": ans, "t": datetime.now().strftime("%H:%M")}
+    )
+
 # ===== Header =====
 st.markdown(
     """
-    <div style="display:flex; align-items:center; gap:12px; padding:4px 0;">
+    <div style="display:flex; align-items:center; gap:12px; padding:4px 0 2px 0;">
       <span style="font-size:28px;">🎓</span>
       <div style="font-size:26px; font-weight:700; color:#800000;">
         MSADS Chatbot Assistant
@@ -53,61 +68,46 @@ st.markdown(
 )
 st.caption("Ask me anything about the **UChicago MSADS program**.")
 
-# ===== Layout (2 cols) =====
+# ===== Layout: Left (Quick FAQs) | Right (Ask/Answer/History) =====
 left, right = st.columns([1, 2], gap="large")
 
 with left:
-    st.subheader("❓ Ask a Question")
+    st.subheader("📌 Quick FAQs")
+    faq_questions = [
+        "What are the core courses in the MS in Applied Data Science program?",
+        "What are some elective courses in the MS in Applied Data Science program?",
+        "How do I apply to the MSADS program?",
+        "Can you provide information on Generative AI Principles course?",
+        "What is the cost per course for the MS in Applied Data Science program?",
+        "How do I apply to the MBA/MS joint degree program?",
+    ]
+    for i, q in enumerate(faq_questions):
+        if st.button(q, key=f"faq_{i}", use_container_width=True):
+            run_qa(q)
 
+with right:
+    # ---- Ask a Question ----
+    st.subheader("❓ Ask a Question")
     with st.form("qa_form", clear_on_submit=False):
         user_question = st.text_input(
             "💡 Enter your question below:",
-            value=st.session_state.preset_question or st.session_state.last_question,
-            placeholder="e.g., What are the core courses?"
+            value=st.session_state.last_question,
+            placeholder="e.g., What are the core courses in the MSADS program?"
         )
         colA, colB = st.columns(2)
         submit = colA.form_submit_button("🔎 Get Answer")
         clear_q = colB.form_submit_button("🧹 Clear")
 
+    if submit:
+        run_qa(user_question)
+
     if clear_q:
-        st.session_state.preset_question = ""
-        st.session_state.last_question = ""
         st.session_state.answer = None
+        st.session_state.last_question = ""
         st.rerun()
 
-    st.markdown("---")
-    st.subheader("📌 Quick FAQs")
-    faq_qs = [
-        "What are the core courses of the MSADS program?",
-        "How do I apply to the MSADS program?",
-        "How is the program structured (in-person vs online)?",
-        "What is the capstone project about?"
-    ]
-    for q in faq_qs:
-        if st.button(q, use_container_width=True):
-            st.session_state.preset_question = q
-            st.rerun()
-
-with right:
+    # ---- Answer ----
     st.subheader("💡 Answer")
-
-    if submit and user_question.strip():
-        with st.spinner("Generating answer..."):
-            try:
-                answer = generate_answer(user_question.strip())
-            except Exception as e:
-                st.error("⚠️ Error while generating the answer.")
-                answer = None
-
-        if answer:
-            st.session_state.answer = answer
-            st.session_state.last_question = user_question.strip()
-            st.session_state.history.append({
-                "q": user_question.strip(),
-                "a": answer,
-                "t": datetime.now().strftime("%H:%M")
-            })
-
     if st.session_state.answer:
         st.markdown(
             f"""
@@ -123,18 +123,21 @@ with right:
             """,
             unsafe_allow_html=True
         )
+        # optional: 다운로드/피드백 버튼 원하면 여기에 추가
 
+    # ---- History ----
     st.subheader("📂 History")
     if not st.session_state.history:
-        st.caption("No history yet. Try asking a question!")
+        st.caption("No history yet. Try a FAQ or ask a question!")
     else:
-        for item in reversed(st.session_state.history[-6:]):
+        for item in reversed(st.session_state.history[-8:]):
             st.markdown(f"**You** ({item['t']}): {item['q']}")
             st.markdown(
                 f"<div style='background:#f7f7f9; padding:12px; border-radius:10px; border:1px solid #eee;'>{item['a']}</div>",
                 unsafe_allow_html=True
             )
             st.divider()
+
 
 
 
