@@ -143,32 +143,24 @@ with right:
 # ===== Footer =====
 st.markdown("---")
 
-logo_path = os.path.join(
-    base_dir,
-    "University Logo",
-    "SVG_RGB_Digital",
-    "University Logo_1Color_Maroon_RGB.svg"
+st.markdown(
+    """
+    <div style="text-align:center; padding:15px; color:grey; font-size:14px;">
+    """,
+    unsafe_allow_html=True
 )
 
-if os.path.exists(logo_path):
-    st.markdown(
-        f"""
-        <div style="text-align:center; padding:15px; color:grey; font-size:14px;">
-            <img src="file://{logo_path}" alt="UChicago Logo" style="height:40px;"><br>
-            MSADS Chatbot Assistant · Built by Group1 (2025)
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-else:
-    st.markdown(
-        """
-        <div style="text-align:center; padding:15px; color:grey; font-size:14px;">
-            MSADS Chatbot Assistant· Midterm Project· Built by Group1 (2025)
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+st.image(logo_path, width=120)
+
+st.markdown(
+    """
+    <div style="text-align:center; padding:5px; color:grey; font-size:14px;">
+        MSADS Chatbot Assistant · Midterm Project · Built by Group1 (2025)
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 
 
