@@ -182,7 +182,7 @@ Answer clearly using short paragraphs and/or bullet points.
 MODELS = {
     "1": {"model_name": "google/flan-t5-base", "model_type": "encoder-decoder"},
     # 무거운 모델은 옵션으로만 (CPU 환경 주의)
-    # "2": {"model_name":"mistralai/Mistral-7B-Instruct-v0.3","model_type":"decoder only"},
+    # "2": {"model_name": "sentence-transformers/paraphrase-MiniLM-L6-v2", "model_type": "encoder-decoder"},
     # "3": {"model_name":"meta-llama/Llama-2-7b-hf","model_type":"decoder only"},
 }
 MODEL_CONFIG = {
