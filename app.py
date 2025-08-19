@@ -25,7 +25,7 @@ logo_path = os.path.join(base_dir, "assets", "uchicago_logo.png")
 if os.path.exists(logo_path):
     st.sidebar.image(logo_path)  # use_container_width 파라미터 없이 경고 회피
 else:
-    st.sidebar.image("https://www.uchicago.edu/assets/images/logos/primary-logo.svg")
+    st.sidebar.image("https://toppng.com/vector/the-university-of-chicago-logo-vector/460006")
 st.sidebar.markdown("Built by Group1 (2025)")
 st.sidebar.markdown("---")
 
@@ -137,6 +137,7 @@ with right:
                 unsafe_allow_html=True
             )
             st.divider()
+
 
 
 
