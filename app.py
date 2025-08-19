@@ -140,7 +140,9 @@ with right:
             )
             st.divider()
 
-# ===== Footer (centered) =====
+import base64
+
+# ===== Footer (precise center) =====
 st.markdown("---")
 
 logo_path = os.path.join(
@@ -148,17 +150,21 @@ logo_path = os.path.join(
     "University Logo_1Color_Maroon_RGB.svg"
 )
 
-c1, c2, c3 = st.columns([1, 1, 1])  # 정확히 3등분
-with c2:
-    st.image(logo_path, width=220)
-    st.markdown(
-        """
-        <div style="text-align:center; color:grey; font-size:14px; margin-top:6px;">
-            MSADS Chatbot Assistant · Midterm Project · Built by Group1 (2025)
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+with open(logo_path, "rb") as f:
+    img_b64 = base64.b64encode(f.read()).decode()
+
+st.markdown(
+    f"""
+    <div style="text-align:center; padding:6px 0 0 0;">
+      <img src="data:image/svg+xml;base64,{img_b64}" style="display:block; margin:0 auto;" width="220" />
+      <div style="color:grey; font-size:14px; margin-top:6px;">
+        MSADS Chatbot Assistant · Midterm Project · Built by Group1 (2025)
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 
 
