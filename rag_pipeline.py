@@ -13,6 +13,44 @@ from langchain.embeddings.base import Embeddings
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, pipeline
 from langchain.llms import HuggingFacePipeline
 
+# (파일 상단 import 근처에 추가)
+import torch
+
+def load_llm_model(selected_model: dict, max_tokens: int = 512):
+    model_name = selected_model["model_name"]
+    model_type = selected_model["model_type"]
+    model_cls = MODEL_CONFIG[model_type]["model_cls"]
+    model_pipe = MODEL_CONFIG[model_type]["pipeline"]
+
+    tok = AutoTokenizer.from_pretrained(model_name)
+
+    if model_type == "decoder only":
+        kwargs = {}
+        if torch.cuda.is_available():
+            kwargs.update(dict(device_map="auto", torch_dtype="auto"))
+        mdl = model_pipe.from_pretrained(model_name, **kwargs)
+
+        # 패딩 및 pad 토큰 정리
+        tok.padding_side = "left"  # (optional) causal LM에서 안정적
+        if tok.pad_token_id is None and tok.eos_token is not None:
+            tok.pad_token = tok.eos_token
+
+        gen = pipeline(
+            model_cls,
+            model=mdl,
+            tokenizer=tok,
+            max_new_tokens=max_tokens,
+            do_sample=False,
+            repetition_penalty=1.05,
+            return_full_text=False,
+        )
+        return HuggingFacePipeline(pipeline=gen)
+
+    # encoder-decoder (남겨둔 경우)
+    mdl = model_pipe.from_pretrained(model_name)
+    gen = pipeline(model_cls, model=mdl, tokenizer=tok, max_new_tokens=max_tokens, do_sample=False)
+    return HuggingFacePipeline(pipeline=gen)
+
 # === Load CSV ===
 base_dir = os.path.dirname(os.path.abspath(__file__))
 df_path = os.path.join(base_dir, "scraped_output_metadata.csv")
@@ -53,7 +91,7 @@ all_metas = df_chunks["metadata"].tolist()
 
 # === Embedding (미리 계산하지 말고 객체만 생성) ===
 embedder: Embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",  # 경량/안정
+    model_name="sentence-transformers/paraphrase-MiniLM-L6-v2",  # CHANGED: 임베딩 전용
     encode_kwargs={"normalize_embeddings": True},
 )
 
@@ -178,16 +216,29 @@ Use the following context to answer the question about the MSADS program.
 Answer clearly using short paragraphs and/or bullet points.
 """
 
+# (create_rag_prompt 아래 아무 곳에 추가)
+def _wrap_for_mistral(tok: AutoTokenizer, prompt_text: str) -> str:
+    try:
+        return tok.apply_chat_template(
+            [
+                {"role": "system", "content": "You are a helpful assistant for the UChicago MSADS program."},
+                {"role": "user", "content": prompt_text},
+            ],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+    except Exception:
+        return f"[INST] {prompt_text.strip()} [/INST]"
+
 # === HuggingFace Model ===
 MODELS = {
-    "2": {"model_name": "sentence-transformers/paraphrase-MiniLM-L6-v2", "model_type": "encoder-decoder"},
-   
+    "2": {"model_name": "mistralai/Mistral-7B-Instruct-v0.3", "model_type": "decoder only"},  # CHANGED
     # "1": {"model_name": "google/flan-t5-base", "model_type": "encoder-decoder"},
     # "3": {"model_name":"meta-llama/Llama-2-7b-hf","model_type":"decoder only"},
 }
 MODEL_CONFIG = {
     "encoder-decoder": {"model_cls": "text2text-generation", "pipeline": AutoModelForSeq2SeqLM},
-    "decoder only": {"model_cls": "text-generation", "pipeline": AutoModelForCausalLM},
+    "decoder only":    {"model_cls": "text-generation",      "pipeline": AutoModelForCausalLM},
 }
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
@@ -202,8 +253,13 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
     return HuggingFacePipeline(pipeline=pipe)
 
 # === Entry ===
-def generate_answer(question: str, model_choice: str = "1") -> str:
+def generate_answer(question: str, model_choice: str = "2") -> str:  # CHANGED default
     llm = load_llm_model(MODELS[model_choice])
     rag_prompt = create_rag_prompt(question, db_retriever=db, embedder=embedder, k_docs=8)
-    return llm(rag_prompt)
+
+    # Mistral instruct 템플릿으로 래핑
+    tok = AutoTokenizer.from_pretrained(MODELS[model_choice]["model_name"])
+    prompt = _wrap_for_mistral(tok, rag_prompt)
+
+    return llm(prompt)
 
