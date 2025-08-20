@@ -74,10 +74,15 @@ with st.sidebar.expander("Dev · HF Auth Check", expanded=False):
     if st.button("Test HF auth (config only)"):
         try:
             from huggingface_hub import HfApi
+            from transformers import AutoConfig
             api = HfApi()
             me = api.whoami(token=os.environ.get("HF_TOKEN"))
-            info = api.model_info("mistralai/Mistral-7B-Instruct-v0.3", token=os.environ.get("HF_TOKEN"))
-            st.success(f"✅ Auth OK as @{me.get('name') or me.get('email')}. Model access: OK.")
+            _ = AutoConfig.from_pretrained(
+                "mistralai/Mistral-7B-Instruct-v0.3",
+                token=os.environ.get("HF_TOKEN"),
+                trust_remote_code=True
+            )
+            st.success(f"✅ Auth OK, @{me.get('name') or me.get('email')}")
         except Exception as e:
             st.exception(e)
             
@@ -214,6 +219,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
