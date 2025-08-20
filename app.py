@@ -2,7 +2,11 @@ import sys
 import os
 import streamlit as st
 from datetime import datetime
+if "HF_TOKEN" in st.secrets:
+    os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
 
+# 토크나이저 포크/병렬 경고 억제
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # ===== Paths & Imports =====
 base_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(base_dir)
@@ -164,6 +168,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
