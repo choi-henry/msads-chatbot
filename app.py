@@ -44,12 +44,12 @@ def run_qa(q: str):
     q = (q or "").strip()
     if not q:
         return
-    with st.spinner("Generating answer..."):
+    with st.spinner("⏳ Generating with Mistral-7B…"):
         try:
             ans = generate_answer(q)
-        except Exception:
-            st.error("⚠️ Error while generating the answer. Check logs for details.")
-            return
+        except Exception as e:
+            st.exception(e)   # 전체 에러 스택까지 출력
+            st.stop()
     st.session_state.answer = ans
     st.session_state.last_question = q
     st.session_state.history.append(
@@ -164,6 +164,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
