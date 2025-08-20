@@ -67,17 +67,6 @@ with st.sidebar.expander("Dev · HF Auth Check", expanded=False):
             st.success(f"✅ Auth OK as @{me.get('name') or me.get('email')}. Model access: OK.")
         except Exception as e:
             st.exception(e)
-
-with st.sidebar.expander("Dev · HF Auth Check", expanded=False):
-    if st.button("Test HF auth (config only)"):
-        try:
-            from huggingface_hub import HfApi
-            api = HfApi()
-            me = api.whoami(token=os.environ.get("HF_TOKEN"))
-            info = api.model_info("mistralai/Mistral-7B-Instruct-v0.3", token=os.environ.get("HF_TOKEN"))
-            st.success(f"✅ Auth OK as @{me.get('name') or me.get('email')}. Model access: OK.")
-        except Exception as e:
-            st.exception(e)
             
 # ===== Session State =====
 if "history" not in st.session_state:
@@ -212,6 +201,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
