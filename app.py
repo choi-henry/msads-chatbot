@@ -1,8 +1,20 @@
 import sys
 import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import streamlit as st
 from datetime import datetime
+
+# ── secrets → env 주입
+if "HF_TOKEN" in st.secrets:
+    os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
+if "HUGGINGFACEHUB_API_TOKEN" in st.secrets:
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
+
+# ── 키 이름 표준화: 둘 중 하나만 있어도 HF_TOKEN으로 맞춰둠
+if not os.environ.get("HF_TOKEN") and os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
+    os.environ["HF_TOKEN"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+
+# 토크나이저 경고 억제
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # ===== Paths & Imports =====
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -174,6 +186,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
