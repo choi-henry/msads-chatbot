@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 from sklearn.metrics.pairwise import cosine_similarity
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS  # 0.1.x OK
+from langchain.vectorstores import FAISS
 from langchain.vectorstores.base import VectorStoreRetriever
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
@@ -23,13 +23,12 @@ HF_TOKEN = HF_TOKEN.strip() if HF_TOKEN else None
 def _assert_hf_token(model_name: str):
     if not HF_TOKEN:
         raise RuntimeError(
-            "HF token not found. Set HF_TOKEN / HUGGINGFACE_HUB_TOKEN "
-            "(or HUGGINGFACEHUB_API_TOKEN) and ensure access to "
-            f"'{model_name}' is approved on Hugging Face."
+            "HF token not found. Set HF_TOKEN / HUGGINGFACE_HUB_TOKEN (or HUGGINGFACEHUB_API_TOKEN) "
+            f"and approve access to '{model_name}' on Hugging Face."
         )
 
 def _auth_kwargs():
-    # 최신 transformers는 use_auth_token만 써도 동작
+    # 호환성 확보: 최신/구버전 모두 처리
     return {"use_auth_token": HF_TOKEN} if HF_TOKEN else {}
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
@@ -40,7 +39,7 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
 
     _assert_hf_token(model_name)
 
-    # (선택) config만 받아서 토큰 유효성 체크
+    # 🔎 초경량 프리체크(여기서 401 나면 바로 원인 확인)
     _ = AutoConfig.from_pretrained(model_name, **_auth_kwargs())
 
     tok = AutoTokenizer.from_pretrained(model_name, **_auth_kwargs())
@@ -66,7 +65,7 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
         )
         return HuggingFacePipeline(pipeline=gen)
 
-    # encoder-decoder 대비
+    # (encoder-decoder 대비)
     mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs())
     gen = pipeline(
         model_cls,
