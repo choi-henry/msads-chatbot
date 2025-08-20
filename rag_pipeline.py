@@ -1,4 +1,5 @@
 import os, ast, re
+import torch
 import numpy as np
 import pandas as pd
 from typing import List, Optional, Dict, Any
@@ -13,25 +14,42 @@ from langchain.embeddings.base import Embeddings
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, pipeline
 from langchain.llms import HuggingFacePipeline
 
-# (updated for llm model)
-import torch
-HF_TOKEN = os.environ.get("HF_TOKEN")
+# ── Hugging Face token 가져오기 (둘 중 아무 키나 OK)
+HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+
+def _assert_hf_token(model_name: str):
+    if not HF_TOKEN:
+        raise RuntimeError(
+            "HF token not found. Set HF_TOKEN (or HUGGINGFACEHUB_API_TOKEN) "
+            f"and ensure access to '{model_name}' is approved on Hugging Face."
+        )
+
+def _auth_kwargs():
+    # transformers 버전에 따라 'token' 또는 'use_auth_token'을 받음 → 둘 다 넣기(하나는 무시됨)
+    return {"token": HF_TOKEN, "use_auth_token": HF_TOKEN} if HF_TOKEN else {}
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
     model_name = selected_model["model_name"]
     model_type = selected_model["model_type"]
-    model_cls = MODEL_CONFIG[model_type]["model_cls"]
+    model_cls  = MODEL_CONFIG[model_type]["model_cls"]
     model_pipe = MODEL_CONFIG[model_type]["pipeline"]
 
-    tok = AutoTokenizer.from_pretrained(model_name, token=HF_TOKEN)
+    # ❗ 토큰 확인
+    _assert_hf_token(model_name)
+
+    # 토크나이저 로드 (토큰 전달)
+    tok = AutoTokenizer.from_pretrained(model_name, **_auth_kwargs())
 
     if model_type == "decoder only":
+        # Mistral-7B 등 causal LM
         kwargs = {}
         if torch.cuda.is_available():
             kwargs.update(dict(device_map="auto", torch_dtype="auto"))
-        mdl = model_pipe.from_pretrained(model_name, token=HF_TOKEN, **kwargs)
 
-        tok.padding_side = "left"  
+        mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs(), **kwargs)
+
+        # causal LM 안정화
+        tok.padding_side = "left"
         if tok.pad_token_id is None and tok.eos_token is not None:
             tok.pad_token = tok.eos_token
 
@@ -42,13 +60,20 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
             max_new_tokens=max_tokens,
             do_sample=False,
             repetition_penalty=1.05,
-            return_full_text=False,
+            return_full_text=False,  # 프롬프트 에코 방지
         )
         return HuggingFacePipeline(pipeline=gen)
 
-    # encoder-decoder ()
-    mdl = model_pipe.from_pretrained(model_name)
-    gen = pipeline(model_cls, model=mdl, tokenizer=tok, max_new_tokens=max_tokens, do_sample=False)
+    # (옵션) encoder-decoder 계열을 사용할 때 대비
+    mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs())
+    gen = pipeline(
+        model_cls,
+        model=mdl,
+        tokenizer=tok,
+        max_new_tokens=max_tokens,
+        do_sample=False,
+        return_full_text=False,
+    )
     return HuggingFacePipeline(pipeline=gen)
 
 # === Load CSV ===
