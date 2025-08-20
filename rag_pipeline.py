@@ -15,6 +15,7 @@ from langchain.llms import HuggingFacePipeline
 
 # (updated for llm model)
 import torch
+HF_TOKEN = os.environ.get("HF_TOKEN")
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
     model_name = selected_model["model_name"]
@@ -22,15 +23,15 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
     model_cls = MODEL_CONFIG[model_type]["model_cls"]
     model_pipe = MODEL_CONFIG[model_type]["pipeline"]
 
-    tok = AutoTokenizer.from_pretrained(model_name)
+    tok = AutoTokenizer.from_pretrained(model_name, token=HF_TOKEN)
 
     if model_type == "decoder only":
         kwargs = {}
         if torch.cuda.is_available():
             kwargs.update(dict(device_map="auto", torch_dtype="auto"))
-        mdl = model_pipe.from_pretrained(model_name, **kwargs)
+        mdl = model_pipe.from_pretrained(model_name, token=HF_TOKEN, **kwargs)
 
-        tok.padding_side = "left"  # (optional) causal LM에서 안정적
+        tok.padding_side = "left"  
         if tok.pad_token_id is None and tok.eos_token is not None:
             tok.pad_token = tok.eos_token
 
