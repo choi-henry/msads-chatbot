@@ -11,10 +11,10 @@ from langchain.vectorstores.base import VectorStoreRetriever
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.base import Embeddings
 
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, pipeline
+from transformers import AutoConfig, AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, pipeline
 from langchain.llms import HuggingFacePipeline
 
-# ── 토큰 표준화: 세 키 중 아무거나 → 하나로 정리 + 공백 제거
+# ── 토큰 표준화
 HF_TOKEN = (os.environ.get("HF_TOKEN") or
             os.environ.get("HUGGINGFACE_HUB_TOKEN") or
             os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
@@ -23,13 +23,14 @@ HF_TOKEN = HF_TOKEN.strip() if HF_TOKEN else None
 def _assert_hf_token(model_name: str):
     if not HF_TOKEN:
         raise RuntimeError(
-            "HF token not found. Set HF_TOKEN / HUGGINGFACE_HUB_TOKEN (or HUGGINGFACEHUB_API_TOKEN) "
-            f"and ensure access to '{model_name}' is approved on Hugging Face."
+            "HF token not found. Set HF_TOKEN / HUGGINGFACE_HUB_TOKEN "
+            "(or HUGGINGFACEHUB_API_TOKEN) and ensure access to "
+            f"'{model_name}' is approved on Hugging Face."
         )
 
 def _auth_kwargs():
-    # transformers/huggingface_hub 버전별 호환: 둘 다 넘기면 하나는 무시되어도 OK
-    return {"token": HF_TOKEN, "use_auth_token": HF_TOKEN} if HF_TOKEN else {}
+    # 최신 transformers는 use_auth_token만 써도 동작
+    return {"use_auth_token": HF_TOKEN} if HF_TOKEN else {}
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
     model_name = selected_model["model_name"]
@@ -39,7 +40,7 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
 
     _assert_hf_token(model_name)
 
-    # (선택) 초경량 사전 헬스체크: config만 받아보기 → 인증 즉시 검증
+    # (선택) config만 받아서 토큰 유효성 체크
     _ = AutoConfig.from_pretrained(model_name, **_auth_kwargs())
 
     tok = AutoTokenizer.from_pretrained(model_name, **_auth_kwargs())
@@ -65,7 +66,7 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
         )
         return HuggingFacePipeline(pipeline=gen)
 
-    # (encoder-decoder 대비)
+    # encoder-decoder 대비
     mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs())
     gen = pipeline(
         model_cls,
