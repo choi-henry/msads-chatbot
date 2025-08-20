@@ -13,7 +13,7 @@ from langchain.embeddings.base import Embeddings
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, pipeline
 from langchain.llms import HuggingFacePipeline
 
-# (파일 상단 import 근처에 추가)
+# (updated for llm model)
 import torch
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
@@ -30,7 +30,6 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
             kwargs.update(dict(device_map="auto", torch_dtype="auto"))
         mdl = model_pipe.from_pretrained(model_name, **kwargs)
 
-        # 패딩 및 pad 토큰 정리
         tok.padding_side = "left"  # (optional) causal LM에서 안정적
         if tok.pad_token_id is None and tok.eos_token is not None:
             tok.pad_token = tok.eos_token
@@ -46,7 +45,7 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
         )
         return HuggingFacePipeline(pipeline=gen)
 
-    # encoder-decoder (남겨둔 경우)
+    # encoder-decoder ()
     mdl = model_pipe.from_pretrained(model_name)
     gen = pipeline(model_cls, model=mdl, tokenizer=tok, max_new_tokens=max_tokens, do_sample=False)
     return HuggingFacePipeline(pipeline=gen)
@@ -60,7 +59,7 @@ if 'metadata' in df.columns:
 else:
     df['metadata'] = [{}] * len(df)
 
-# 텍스트 컬럼 자동 추론
+# TEXT COL
 TEXT_COL = "text" if "text" in df.columns else ("content" if "content" in df.columns else None)
 if TEXT_COL is None:
     raise ValueError("CSV에 'text' 또는 'content' 컬럼이 필요합니다.")
@@ -89,7 +88,7 @@ df_chunks = build_chunks_dataframe(df)
 all_chunks = df_chunks["chunk_text"].tolist()
 all_metas = df_chunks["metadata"].tolist()
 
-# === Embedding (미리 계산하지 말고 객체만 생성) ===
+# === Embedding ===
 embedder: Embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-MiniLM-L6-v2",  # CHANGED: 임베딩 전용
     encode_kwargs={"normalize_embeddings": True},
@@ -216,7 +215,6 @@ Use the following context to answer the question about the MSADS program.
 Answer clearly using short paragraphs and/or bullet points.
 """
 
-# (create_rag_prompt 아래 아무 곳에 추가)
 def _wrap_for_mistral(tok: AutoTokenizer, prompt_text: str) -> str:
     try:
         return tok.apply_chat_template(
