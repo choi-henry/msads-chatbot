@@ -15,20 +15,12 @@ from transformers import AutoConfig, AutoTokenizer, AutoModelForSeq2SeqLM, AutoM
 from langchain.llms import HuggingFacePipeline
 
 # ── 토큰 표준화
-HF_TOKEN = (os.environ.get("HF_TOKEN") or
-            os.environ.get("HUGGINGFACE_HUB_TOKEN") or
-            os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
+HF_TOKEN = (os.environ.get("HF_TOKEN")
+            or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+            or os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
 HF_TOKEN = HF_TOKEN.strip() if HF_TOKEN else None
 
-def _assert_hf_token(model_name: str):
-    if not HF_TOKEN:
-        raise RuntimeError(
-            "HF token not found. Set HF_TOKEN (or HUGGINGFACE_HUB_TOKEN / HUGGINGFACEHUB_API_TOKEN) "
-            f"and ensure access to '{model_name}' is approved on Hugging Face."
-        )
-
 def _auth_kwargs():
-    # huggingface_hub >= 0.20.0 은 token= 만 있으면 됨
     return {"token": HF_TOKEN} if HF_TOKEN else {}
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
@@ -37,44 +29,28 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
     model_cls  = MODEL_CONFIG[model_type]["model_cls"]
     model_pipe = MODEL_CONFIG[model_type]["pipeline"]
 
-    _assert_hf_token(model_name)
-
-    # 인증 체크
+    # precheck: this will 401 if token/권한 문제
     _ = AutoConfig.from_pretrained(model_name, **_auth_kwargs())
 
     tok = AutoTokenizer.from_pretrained(model_name, **_auth_kwargs())
-
     if model_type == "decoder only":
+        import torch
         kwargs = {}
         if torch.cuda.is_available():
             kwargs.update(dict(device_map="auto", torch_dtype="auto"))
         mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs(), **kwargs)
-
         tok.padding_side = "left"
         if tok.pad_token_id is None and tok.eos_token is not None:
             tok.pad_token = tok.eos_token
-
-        gen = pipeline(
-            model_cls,
-            model=mdl,
-            tokenizer=tok,
-            max_new_tokens=max_tokens,
-            do_sample=False,
-            repetition_penalty=1.05,
-            return_full_text=False,
-        )
+        gen = pipeline(model_cls, model=mdl, tokenizer=tok,
+                       max_new_tokens=max_tokens, do_sample=False,
+                       repetition_penalty=1.05, return_full_text=False)
         return HuggingFacePipeline(pipeline=gen)
 
-    # encoder-decoder
     mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs())
-    gen = pipeline(
-        model_cls,
-        model=mdl,
-        tokenizer=tok,
-        max_new_tokens=max_tokens,
-        do_sample=False,
-        return_full_text=False,
-    )
+    gen = pipeline(model_cls, model=mdl, tokenizer=tok,
+                   max_new_tokens=max_tokens, do_sample=False,
+                   return_full_text=False)
     return HuggingFacePipeline(pipeline=gen)
 
 # === Load CSV ===
