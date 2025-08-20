@@ -1,17 +1,21 @@
-import sys
-import os
+import os, sys
 import streamlit as st
 from datetime import datetime
 
 # ── secrets → env 주입
-if "HF_TOKEN" in st.secrets:
-    os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
-if "HUGGINGFACEHUB_API_TOKEN" in st.secrets:
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
+for k in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
+    if k in st.secrets:
+        os.environ[k] = st.secrets[k].strip()
 
-# ── 키 이름 표준화: 둘 중 하나만 있어도 HF_TOKEN으로 맞춰둠
-if not os.environ.get("HF_TOKEN") and os.environ.get("HUGGINGFACEHUB_API_TOKEN"):
-    os.environ["HF_TOKEN"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+# ── 키 이름 표준화: 셋 중 하나만 있어도 모두 채워 넣기
+val = (os.environ.get("HF_TOKEN") or
+       os.environ.get("HUGGINGFACE_HUB_TOKEN") or
+       os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
+if val:
+    val = val.strip()
+    os.environ["HF_TOKEN"] = val
+    os.environ["HUGGINGFACE_HUB_TOKEN"] = val
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = val
 
 # 토크나이저 경고 억제
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -186,6 +190,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
