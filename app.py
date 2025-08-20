@@ -1,4 +1,5 @@
-import os, sys
+import sys
+import os
 import streamlit as st
 from datetime import datetime
 
@@ -7,7 +8,7 @@ for k in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
     if k in st.secrets:
         os.environ[k] = st.secrets[k].strip()
 
-# ── 키 이름 표준화: 셋 중 하나만 있어도 모두 채워 넣기
+# ── 키 표준화: 아무 키 하나만 있어도 모두 채워넣음
 val = (os.environ.get("HF_TOKEN") or
        os.environ.get("HUGGINGFACE_HUB_TOKEN") or
        os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
@@ -17,7 +18,15 @@ if val:
     os.environ["HUGGINGFACE_HUB_TOKEN"] = val
     os.environ["HUGGINGFACEHUB_API_TOKEN"] = val
 
-# 토크나이저 경고 억제
+# ── 허브 로그인 (세션 캐시에 기록)
+try:
+    from huggingface_hub import login
+    if val:
+        login(token=val, add_to_git_credential=False)
+except Exception as _e:
+    pass  # 로그인 실패해도 아래에서 토큰 인자 전달로 재시도
+
+# 경고 억제
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # ===== Paths & Imports =====
@@ -197,6 +206,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
