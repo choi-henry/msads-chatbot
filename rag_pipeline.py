@@ -241,17 +241,6 @@ MODEL_CONFIG = {
     "decoder only":    {"model_cls": "text-generation",      "pipeline": AutoModelForCausalLM},
 }
 
-def load_llm_model(selected_model: dict, max_tokens: int = 512):
-    model_name = selected_model["model_name"]
-    model_type = selected_model["model_type"]
-    model_cls = MODEL_CONFIG[model_type]["model_cls"]
-    model_pipe = MODEL_CONFIG[model_type]["pipeline"]
-
-    tok = AutoTokenizer.from_pretrained(model_name)
-    mdl = model_pipe.from_pretrained(model_name)  # 장비에 맞게 옵션 추가 가능
-    pipe = pipeline(model_cls, model=mdl, tokenizer=tok, max_new_tokens=max_tokens)
-    return HuggingFacePipeline(pipeline=pipe)
-
 # === Entry ===
 def generate_answer(question: str, model_choice: str = "2") -> str:  # CHANGED default
     llm = load_llm_model(MODELS[model_choice])
