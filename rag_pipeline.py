@@ -14,18 +14,21 @@ from langchain.embeddings.base import Embeddings
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, pipeline
 from langchain.llms import HuggingFacePipeline
 
-# ── Hugging Face token 가져오기 (둘 중 아무 키나 OK)
-HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+# ── 토큰 표준화: 세 키 중 아무거나 → 하나로 정리 + 공백 제거
+HF_TOKEN = (os.environ.get("HF_TOKEN") or
+            os.environ.get("HUGGINGFACE_HUB_TOKEN") or
+            os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
+HF_TOKEN = HF_TOKEN.strip() if HF_TOKEN else None
 
 def _assert_hf_token(model_name: str):
     if not HF_TOKEN:
         raise RuntimeError(
-            "HF token not found. Set HF_TOKEN (or HUGGINGFACEHUB_API_TOKEN) "
+            "HF token not found. Set HF_TOKEN / HUGGINGFACE_HUB_TOKEN (or HUGGINGFACEHUB_API_TOKEN) "
             f"and ensure access to '{model_name}' is approved on Hugging Face."
         )
 
 def _auth_kwargs():
-    # transformers 버전에 따라 'token' 또는 'use_auth_token'을 받음 → 둘 다 넣기(하나는 무시됨)
+    # transformers/huggingface_hub 버전별 호환: 둘 다 넘기면 하나는 무시되어도 OK
     return {"token": HF_TOKEN, "use_auth_token": HF_TOKEN} if HF_TOKEN else {}
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
@@ -34,21 +37,19 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
     model_cls  = MODEL_CONFIG[model_type]["model_cls"]
     model_pipe = MODEL_CONFIG[model_type]["pipeline"]
 
-    # ❗ 토큰 확인
     _assert_hf_token(model_name)
 
-    # 토크나이저 로드 (토큰 전달)
+    # (선택) 초경량 사전 헬스체크: config만 받아보기 → 인증 즉시 검증
+    _ = AutoConfig.from_pretrained(model_name, **_auth_kwargs())
+
     tok = AutoTokenizer.from_pretrained(model_name, **_auth_kwargs())
 
     if model_type == "decoder only":
-        # Mistral-7B 등 causal LM
         kwargs = {}
         if torch.cuda.is_available():
             kwargs.update(dict(device_map="auto", torch_dtype="auto"))
-
         mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs(), **kwargs)
 
-        # causal LM 안정화
         tok.padding_side = "left"
         if tok.pad_token_id is None and tok.eos_token is not None:
             tok.pad_token = tok.eos_token
@@ -60,11 +61,11 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
             max_new_tokens=max_tokens,
             do_sample=False,
             repetition_penalty=1.05,
-            return_full_text=False,  # 프롬프트 에코 방지
+            return_full_text=False,
         )
         return HuggingFacePipeline(pipeline=gen)
 
-    # (옵션) encoder-decoder 계열을 사용할 때 대비
+    # (encoder-decoder 대비)
     mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs())
     gen = pipeline(
         model_cls,
