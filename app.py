@@ -1,32 +1,45 @@
-import sys
-import os
+import os, sys
 import streamlit as st
 from datetime import datetime
 
-# ── secrets → env 주입
+# ---- load token from secrets -> env
 for k in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
     if k in st.secrets:
         os.environ[k] = st.secrets[k].strip()
 
-# ── 키 표준화: 아무 키 하나만 있어도 모두 채워넣음
-val = (os.environ.get("HF_TOKEN") or
-       os.environ.get("HUGGINGFACE_HUB_TOKEN") or
-       os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
-if val:
-    val = val.strip()
-    os.environ["HF_TOKEN"] = val
-    os.environ["HUGGINGFACE_HUB_TOKEN"] = val
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = val
+# collect candidates & validate
+candidates = []
+for k in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
+    v = os.environ.get(k)
+    if v:
+        candidates.append(v.strip())
 
-# ── 허브 로그인 (세션 캐시에 기록)
-try:
-    from huggingface_hub import login
-    if val:
-        login(token=val, add_to_git_credential=False)
-except Exception as _e:
-    pass  # 로그인 실패해도 아래에서 토큰 인자 전달로 재시도
+def _pick_valid_hf_token(cands):
+    try:
+        from huggingface_hub import HfApi
+        api = HfApi()
+        for tok in cands:
+            try:
+                api.whoami(token=tok)  # valid?
+                for kk in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
+                    os.environ[kk] = tok
+                return True
+            except Exception:
+                continue
+        return False
+    except Exception:
+        if cands:
+            tok = cands[0]
+            for kk in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
+                os.environ[kk] = tok
+            return True
 
-# 경고 억제
+ok = _pick_valid_hf_token(candidates)
+if not ok:
+    for kk in ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN", "HUGGINGFACEHUB_API_TOKEN"):
+        if kk in os.environ:
+            del os.environ[kk]
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # ===== Paths & Imports =====
@@ -201,6 +214,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
