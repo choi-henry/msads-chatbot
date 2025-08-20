@@ -23,13 +23,13 @@ HF_TOKEN = HF_TOKEN.strip() if HF_TOKEN else None
 def _assert_hf_token(model_name: str):
     if not HF_TOKEN:
         raise RuntimeError(
-            "HF token not found. Set HF_TOKEN / HUGGINGFACE_HUB_TOKEN (or HUGGINGFACEHUB_API_TOKEN) "
-            f"and approve access to '{model_name}' on Hugging Face."
+            "HF token not found. Set HF_TOKEN (or HUGGINGFACE_HUB_TOKEN / HUGGINGFACEHUB_API_TOKEN) "
+            f"and ensure access to '{model_name}' is approved on Hugging Face."
         )
 
 def _auth_kwargs():
-    # 호환성 확보: 최신/구버전 모두 처리
-    return {"use_auth_token": HF_TOKEN} if HF_TOKEN else {}
+    # huggingface_hub >= 0.20.0 은 token= 만 있으면 됨
+    return {"token": HF_TOKEN} if HF_TOKEN else {}
 
 def load_llm_model(selected_model: dict, max_tokens: int = 512):
     model_name = selected_model["model_name"]
@@ -39,7 +39,7 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
 
     _assert_hf_token(model_name)
 
-    # 🔎 초경량 프리체크(여기서 401 나면 바로 원인 확인)
+    # 인증 체크
     _ = AutoConfig.from_pretrained(model_name, **_auth_kwargs())
 
     tok = AutoTokenizer.from_pretrained(model_name, **_auth_kwargs())
@@ -65,7 +65,7 @@ def load_llm_model(selected_model: dict, max_tokens: int = 512):
         )
         return HuggingFacePipeline(pipeline=gen)
 
-    # (encoder-decoder 대비)
+    # encoder-decoder
     mdl = model_pipe.from_pretrained(model_name, **_auth_kwargs())
     gen = pipeline(
         model_cls,
