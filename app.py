@@ -48,13 +48,20 @@ else:
 st.sidebar.markdown("Built by Group1 (2025)")
 st.sidebar.markdown("---")
 
-with st.sidebar.expander("Dev · HF Token Status", expanded=True):
-    def _mask(x): return (x[:6] + "…") if x else None
-    t1 = os.environ.get("HF_TOKEN")
-    t2 = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
-    st.write("HF_TOKEN set:", bool(t1))
-    st.write("HUGGINGFACEHUB_API_TOKEN set:", bool(t2))
-    st.write("HF_TOKEN preview:", _mask(t1))
+with st.sidebar.expander("Dev · HF Auth Check", expanded=False):
+    if st.button("Test HF auth (config only)"):
+        from transformers import AutoConfig
+        import os
+        try:
+            cfg = AutoConfig.from_pretrained(
+                "mistralai/Mistral-7B-Instruct-v0.3",
+                token=os.environ.get("HF_TOKEN"),
+                use_auth_token=os.environ.get("HF_TOKEN"),
+                trust_remote_code=True
+            )
+            st.success("✅ Auth OK: config.json fetched.")
+        except Exception as e:
+            st.exception(e)
 
 
 # ===== Session State =====
@@ -190,6 +197,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
