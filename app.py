@@ -45,12 +45,12 @@ st.sidebar.markdown("Built by Group1 (2025)")
 st.sidebar.markdown("---")
 
 with st.sidebar.expander("Dev · HF Token Status", expanded=True):
-    st.write("HF_TOKEN set:", bool(os.environ.get("HF_TOKEN")))
-    st.write("HUGGINGFACEHUB_API_TOKEN set:", bool(os.environ.get("HUGGINGFACEHUB_API_TOKEN")))
-    # 토큰 일부만 보여주기 (보안)
-    def _mask(x):
-        return x[:6] + "..." if x else None
-    st.write("HF_TOKEN preview:", _mask(os.environ.get("HF_TOKEN")))
+    def _mask(x): return (x[:6] + "…") if x else None
+    t1 = os.environ.get("HF_TOKEN")
+    t2 = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    st.write("HF_TOKEN set:", bool(t1))
+    st.write("HUGGINGFACEHUB_API_TOKEN set:", bool(t2))
+    st.write("HF_TOKEN preview:", _mask(t1))
 
 
 # ===== Session State =====
@@ -186,6 +186,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
